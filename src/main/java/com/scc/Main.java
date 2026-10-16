@@ -2,6 +2,8 @@ package com.scc;
 
 
 import com.scc.dao.UserDao;
+import com.scc.model.User;
+import com.scc.ui.AdminMenu;
 
 import java.util.Scanner;
 
@@ -21,6 +23,7 @@ public class Main {
 
         switch(choice){
             case "1":
+                handlelogin();
                 break;
             case "2":
                 System.out.print("Enter new username: ");
@@ -51,7 +54,7 @@ public class Main {
                 }
 
                 if(role != null){
-                    userDao.registerUser(user, pass, full_name, role);
+                    userDao.registerUser(user,pass,full_name,role);
                 }else {
 
                     System.out.println("Invalid role selection");
@@ -60,6 +63,20 @@ public class Main {
 
         }
 
+    }private static void handlelogin(){
+        System.out.print("Enter username: ");
+        String username = sc.nextLine();
+        System.out.print("Enter password: ");
+        String password = sc.nextLine();
+
+        User user = userDao.login(username,password);
+        if(user != null){
+            System.out.println("\n -> Welcome " +user.full_name()+" | ROLE: "+user.roles()+"");
+            switch (user.roles()){
+                case "ADMIN" -> new AdminMenu(userDao, sc).display(user);
+                default -> System.out.println("Account role not found!");
+            }
+        }
     }
 
 }
