@@ -94,4 +94,47 @@ public class UserDao {
         } catch (SQLException e) { System.err.println(e.getMessage()); }
         return users;
     }
+
+    // 1. Get users with PENDING status
+    public List<User> getPendingUsers() {
+        List<User> pendingUsers = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE status = 'PENDING'";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                pendingUsers.add(new User(
+                        rs.getInt("user_id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("full_name"),
+                        rs.getString("roles"),
+                        rs.getString("status")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching pending users: " + e.getMessage());
+        }
+        return pendingUsers;
+    }
+
+    // 2. Update status to APPROVED for a specific user_id
+    public boolean approveUser(int userId) {
+        String sql = "UPDATE users SET status = 'APPROVED' WHERE user_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error approving user: " + e.getMessage());
+            return false;
+        }
+    }
+
 }
