@@ -1,6 +1,8 @@
 package com.scc.ui;
 
+import com.scc.dao.ActivityLogDao;
 import com.scc.dao.UserDao;
+import com.scc.model.ActivityLog;
 import com.scc.model.User;
 import java.util.List;
 import java.util.Scanner;
@@ -8,6 +10,7 @@ import java.util.Scanner;
 public class AdminMenu {
     private final UserDao userDao;
     private final Scanner scanner;
+    private final ActivityLogDao logDao = new ActivityLogDao();
 
     public AdminMenu(UserDao userDao, Scanner scanner) {
         this.userDao = userDao;
@@ -24,8 +27,9 @@ public class AdminMenu {
             System.out.println("2. View Pending Approvals");
             System.out.println("3. Approve a User");
             System.out.println("4. Update User Role & Status");
-            System.out.println("5. Log out");
-            System.out.print("Choose an option (1-5): ");
+            System.out.println("5. View System Audit Logs");
+            System.out.println("6. Log out");
+            System.out.print("Choose an option (1-6): ");
 
             String choice = scanner.nextLine().trim();
 
@@ -34,7 +38,8 @@ public class AdminMenu {
                 case "2" -> viewPendingUsers();
                 case "3" -> approveUser();
                 case "4" -> updateUser(admin);
-                case "5" -> {
+                case "5" -> viewAuditLogs();
+                case "6" -> {
                     System.out.println("Logging out...");
                     loggedIn = false;
                 }
@@ -101,7 +106,6 @@ public class AdminMenu {
             return;
         }
 
-        // Self-Edit Restriction Logic
         if (targetId == currentAdmin.user_id()) {
             System.out.println("WARNING: Modifying the currently active admin account is restricted.");
             return;
@@ -123,7 +127,33 @@ public class AdminMenu {
         }
     }
 
-    // --- INPUT VALIDATION WRAPPERS ---
+    private void viewAuditLogs() {
+        System.out.println("\n--- System Audit Logs ---");
+        System.out.println("1. View All Logs");
+        System.out.println("2. Filter Logs by User ID");
+        System.out.print("Choose an option: ");
+        String choice = scanner.nextLine().trim();
+
+        List<ActivityLog> logs;
+        if (choice.equals("2")) {
+            System.out.print("Enter User ID: ");
+            int userId = readIntInput();
+            logs = logDao.getLogsByUserId(userId);
+        } else {
+            logs = logDao.getAllLogs();
+        }
+
+        if (logs.isEmpty()) {
+            System.out.println("No logs found.");
+            return;
+        }
+
+        System.out.printf("\n%-5s | %-8s | %-18s | %-35s | %-20s%n", "ID", "User ID", "Action Type", "Description", "Timestamp");
+        System.out.println("------------------------------------------------------------------------------------------------------");
+        for (ActivityLog log : logs) {
+            System.out.println(log.toString());
+        }
+    }
 
     private int readIntInput() {
         while (true) {

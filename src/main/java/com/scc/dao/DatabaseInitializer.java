@@ -17,10 +17,25 @@ public class DatabaseInitializer {
             );
         """;
 
+        // NEW: Activity Logs Table with ON DELETE CASCADE
+        String createLogsTable = """
+            CREATE TABLE IF NOT EXISTS activity_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                action_type TEXT NOT NULL,
+                description TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            );
+        """;
+
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
+
             stmt.execute(createUsersTable);
+            stmt.execute(createLogsTable);
             System.out.println("Database tables verified/created.");
+
         } catch (SQLException e) {
             System.err.println("Database initialization failed: " + e.getMessage());
         }
