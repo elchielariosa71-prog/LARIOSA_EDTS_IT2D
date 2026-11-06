@@ -23,8 +23,9 @@ public class AdminMenu {
             System.out.println("1. View All Users");
             System.out.println("2. View Pending Approvals");
             System.out.println("3. Approve a User");
-            System.out.println("4. Log out");
-            System.out.print("Choose an option (1-4): ");
+            System.out.println("4. Update User Role & Status");
+            System.out.println("5. Log out");
+            System.out.print("Choose an option (1-5): ");
 
             String choice = scanner.nextLine().trim();
 
@@ -32,7 +33,8 @@ public class AdminMenu {
                 case "1" -> viewAllUsers();
                 case "2" -> viewPendingUsers();
                 case "3" -> approveUser();
-                case "4" -> {
+                case "4" -> updateUser(admin);
+                case "5" -> {
                     System.out.println("Logging out...");
                     loggedIn = false;
                 }
@@ -67,46 +69,110 @@ public class AdminMenu {
         printUserTable(pending);
 
         System.out.print("\nEnter User ID to APPROVE (or enter 0 to cancel): ");
-        String input = scanner.nextLine().trim();
+        int targetId = readIntInput();
 
-        if (input.equals("0")) {
+        if (targetId == 0) {
             System.out.println("Action cancelled.");
             return;
         }
 
-        try {
-            int targetId = Integer.parseInt(input);
+        boolean exists = pending.stream().anyMatch(u -> u.user_id() == targetId);
 
-            // Check if the ID actually exists in the pending list
-            boolean exists = pending.stream().anyMatch(u -> u.user_id() == targetId);
-
-            if (exists) {
-                if (userDao.approveUser(targetId)) {
-                    System.out.println("Success! User ID " + targetId + " has been APPROVED.");
-                } else {
-                    System.out.println("Failed to update database.");
-                }
+        if (exists) {
+            if (userDao.approveUser(targetId)) {
+                System.out.println("Success! User ID " + targetId + " has been APPROVED.");
             } else {
-                System.out.println("Error: That User ID is not in the pending list.");
+                System.out.println("Failed to update database.");
             }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a valid number.");
+        } else {
+            System.out.println("Error: That User ID is not in the pending list.");
         }
     }
 
-    // Helper method to format the table exactly as requested
-    private void printUserTable(List<User> users) {
-        // Format: %-5s (ID), %-15s (Username), %-12s (Role), %-10s (Status)
-        System.out.printf("%-5s %-15s %-12s %-10s%n", "ID", "Username", "Role", "Status");
-        System.out.println("--------------------------------------------------");
+    private void updateUser(User currentAdmin) {
+        System.out.println("\n--- Update User ---");
+        printUserTable(userDao.getAllUsers());
 
+        System.out.print("\nEnter User ID to update (or enter 0 to cancel): ");
+        int targetId = readIntInput();
+
+        if (targetId == 0) {
+            System.out.println("Action cancelled.");
+            return;
+        }
+
+        // Self-Edit Restriction Logic
+        if (targetId == currentAdmin.user_id()) {
+            System.out.println("WARNING: Modifying the currently active admin account is restricted.");
+            return;
+        }
+
+        boolean exists = userDao.getAllUsers().stream().anyMatch(u -> u.user_id() == targetId);
+        if (!exists) {
+            System.out.println("Error: User ID not found.");
+            return;
+        }
+
+        String newRole = readValidRole();
+        String newStatus = readValidStatus();
+
+        if (userDao.updateUserRoleAndStatus(targetId, newRole, newStatus)) {
+            System.out.println("Success! User ID " + targetId + " updated to Role: " + newRole + " | Status: " + newStatus);
+        } else {
+            System.out.println("Failed to update database.");
+        }
+    }
+
+    // --- INPUT VALIDATION WRAPPERS ---
+
+    private int readIntInput() {
+        while (true) {
+            String input = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.print("Invalid input (letters/symbols detected). Please enter a valid number: ");
+            }
+        }
+    }
+
+    private String readValidRole() {
+        while (true) {
+            System.out.print("Enter new Role (DISPATCHER, WAREHOUSE MANAGER, BILLING STAFF, ADMIN): ");
+            String input = scanner.nextLine().trim().toUpperCase();
+
+            if (input.equals("DISPATCHER") || input.equals("WAREHOUSE MANAGER") ||
+                    input.equals("BILLING STAFF") || input.equals("ADMIN")) {
+                return input;
+            } else {
+                System.out.println("Invalid role. Please try again.");
+            }
+        }
+    }
+
+    private String readValidStatus() {
+        while (true) {
+            System.out.print("Enter new Status (APPROVED, PENDING): ");
+            String input = scanner.nextLine().trim().toUpperCase();
+
+            if (input.equals("APPROVED") || input.equals("PENDING")) {
+                return input;
+            } else {
+                System.out.println("Invalid status. Please try again.");
+            }
+        }
+    }
+
+    private void printUserTable(List<User> users) {
+        System.out.printf("%-5s %-20s %-18s %-10s%n", "ID", "Username", "Role", "Status");
+        System.out.println("----------------------------------------------------------------------");
         for (User u : users) {
-            System.out.printf("%-5d %-15s %-12s %-10s%n",
+            System.out.printf("%-5d %-20s %-18s %-10s%n",
                     u.user_id(),
                     u.username(),
                     u.roles(),
                     u.status());
         }
-        System.out.println("--------------------------------------------------");
+        System.out.println("----------------------------------------------------------------------");
     }
 }
