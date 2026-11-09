@@ -24,7 +24,7 @@ public class DatabaseInitializer {
                 user_id INTEGER,
                 action_type TEXT NOT NULL,
                 description TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
                 FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
             );
         """;
