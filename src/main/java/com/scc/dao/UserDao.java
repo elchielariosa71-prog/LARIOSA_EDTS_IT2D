@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
-    // Initialize the log DAO
     private final ActivityLogDao logDao = new ActivityLogDao();
 
     public UserDao() {
@@ -44,7 +43,6 @@ public class UserDao {
             pstmt.setString(4, role.toUpperCase());
             pstmt.executeUpdate();
 
-            // Get the new user's ID to log it correctly
             try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     int newUserId = generatedKeys.getInt(1);
@@ -123,7 +121,6 @@ public class UserDao {
             pstmt.setInt(1, userId);
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                // Log admin approval
                 logDao.logAction(userId, "ACCOUNT_APPROVED", "Admin approved account for User ID " + userId);
                 return true;
             }

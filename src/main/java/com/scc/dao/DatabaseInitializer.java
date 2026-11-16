@@ -17,7 +17,7 @@ public class DatabaseInitializer {
             );
         """;
 
-        // NEW: Activity Logs Table with ON DELETE CASCADE
+
         String createLogsTable = """
             CREATE TABLE IF NOT EXISTS activity_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

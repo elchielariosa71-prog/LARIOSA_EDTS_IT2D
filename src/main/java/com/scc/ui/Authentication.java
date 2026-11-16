@@ -8,7 +8,7 @@ public class Authentication {
     private final UserDao userDao;
     private final Scanner scanner;
 
-    // Passed from Main to prevent duplicate resource creation
+
     public Authentication(UserDao userDao, Scanner scanner) {
         this.userDao = userDao;
         this.scanner = scanner;
@@ -71,7 +71,6 @@ public class Authentication {
         User loggedInUser = userDao.login(username, password);
 
         if (loggedInUser != null) {
-            // NEW: Log the login action here, after the UserDao is done with the database
             new com.scc.dao.ActivityLogDao().logAction(loggedInUser.user_id(), "LOGIN", "User '" + username + "' logged into the system.");
 
             System.out.println("\n -> Welcome " + loggedInUser.full_name() + " | ROLE: " + loggedInUser.roles());

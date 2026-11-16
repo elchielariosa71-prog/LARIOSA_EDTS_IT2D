@@ -10,7 +10,7 @@ public class DatabaseConnection {
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(DB_URL);
-        // Enable Foreign Key constraints as required
+
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA foreign_keys = ON;");
         }
