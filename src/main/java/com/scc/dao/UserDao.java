@@ -131,23 +131,53 @@ public class UserDao {
         }
     }
 
-    public boolean updateUserRoleAndStatus(int userId, String newRole, String newStatus) {
-        String sql = "UPDATE users SET roles = ?, status = ? WHERE user_id = ?";
+    public boolean updateUserRole(int userId, String newRole) {
+        String sql = "UPDATE users SET roles = ? WHERE user_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, newRole);
-            pstmt.setString(2, newStatus);
-            pstmt.setInt(3, userId);
-            int rowsAffected = pstmt.executeUpdate();
-            if (rowsAffected > 0) {
-                // Log the role/status update
-                logDao.logAction(userId, "ROLE_UPDATED", "Admin changed role to " + newRole + " and status to " + newStatus);
-                return true;
+            pstmt.setInt(2, userId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) { return false; }
+    }
+
+    public boolean updateUserStatus(int userId, String newStatus) {
+        String sql = "UPDATE users SET status = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, userId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) { return false; }
+    }
+
+    public boolean isUsernameTaken(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
-            return false;
         } catch (SQLException e) {
-            System.err.println("Error updating user: " + e.getMessage());
-            return false;
+            System.err.println("Error checking username: " + e.getMessage());
         }
+        return false;
+    }
+
+    public int getAdminCount() {
+        String sql = "SELECT COUNT(*) FROM users WHERE roles = 'ADMIN'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting admins: " + e.getMessage());
+        }
+        return 0;
     }
 }

@@ -38,15 +38,55 @@ public class Authentication {
     }
 
     private void handleRegister() {
-        System.out.print("Enter new username: ");
-        String username = scanner.nextLine();
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-        System.out.print("Enter full_name: ");
-        String fullName = scanner.nextLine();
+        System.out.println("\n--- REGISTRATION (Type 0 at any prompt to cancel) ---");
 
-        System.out.print("Select Role [1] WAREHOUSE MANAGER | [2] BILLING STAFF | [3] DISPATCHER | [4] ADMIN: ");
-        String roleInput = scanner.nextLine();
+        System.out.print("Enter new username: ");
+        String username = scanner.nextLine().trim();
+        if (username.equals("0")) {
+            System.out.println("-> Registration cancelled.");
+            return;
+        }
+
+
+        if (userDao.isUsernameTaken(username)) {
+            System.out.println("-> Error: Username '" + username + "' is already taken. Please try another one.");
+            return;
+        }
+
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine().trim();
+        if (password.equals("0")) {
+            System.out.println("-> Registration cancelled.");
+            return;
+        }
+
+        System.out.print("Enter full name (First Name and Last Name): ");
+        String fullName = scanner.nextLine().trim();
+        if (fullName.equals("0")) {
+            System.out.println("-> Registration cancelled.");
+            return;
+        }
+
+
+        if (!fullName.contains(" ") || fullName.split(" ").length < 2) {
+            System.out.println("-> Error: Please enter both your First Name and Last Name.");
+            return;
+        }
+
+        System.out.print("Select Role [1] WAREHOUSE MANAGER | [2] BILLING STAFF | [3] DISPATCHER | [4] ADMIN | [0] Cancel: ");
+        String roleInput = scanner.nextLine().trim();
+
+        if (roleInput.equals("0")) {
+            System.out.println("-> Registration cancelled.");
+            return;
+        }
+
+
+        if (roleInput.equals("4") && userDao.getAdminCount() > 0) {
+            System.out.println("-> Error: An Admin account already exists. You cannot register a second Admin.");
+            return;
+        }
+
         String role = switch (roleInput) {
             case "1" -> "WAREHOUSE MANAGER";
             case "2" -> "BILLING STAFF";
@@ -58,7 +98,7 @@ public class Authentication {
         if (role != null) {
             userDao.registerUser(username, password, fullName, role);
         } else {
-            System.out.println("Invalid role selection.");
+            System.out.println("-> Invalid role selection. Registration cancelled.");
         }
     }
 
@@ -77,7 +117,10 @@ public class Authentication {
 
             switch (loggedInUser.roles()) {
                 case "ADMIN" -> new AdminMenu(userDao, scanner).display(loggedInUser);
-                default -> System.out.println("Account role not found or menu not yet implemented!");
+                case "WAREHOUSE MANAGER" -> new WarehouseManagerMenu(userDao, scanner).display(loggedInUser);
+                case "BILLING STAFF" -> new BillingStaffMenu(userDao, scanner).display(loggedInUser);
+                case "DISPATCHER" -> new DispatcherMenu(userDao, scanner).display(loggedInUser);
+                default -> System.out.println("Account role not found!");
             }
         }
     }
