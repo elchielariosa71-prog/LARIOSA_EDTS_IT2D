@@ -111,7 +111,7 @@ public class DispatcherMenu extends BaseMenu {
                 }
                 default -> {
                     System.out.println("-> Error: Invalid selection. Please choose 1 or 2.");
-                    continue; // Loop again
+                    continue;
                 }
             }
             break;

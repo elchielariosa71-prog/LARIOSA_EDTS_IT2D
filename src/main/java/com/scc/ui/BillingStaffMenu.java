@@ -114,19 +114,19 @@ public class BillingStaffMenu extends BaseMenu {
                 amount = Double.parseDouble(input);
             } catch (NumberFormatException e) {
                 System.out.println("-> Error: Invalid input. Please enter numbers only.");
-                continue; // Loop again
+                continue;
             }
 
 
             if (amount <= 0) {
                 System.out.println("-> Error: Payment amount must be greater than 0.");
-                continue; // Loop again
+                continue;
             }
 
 
             if (amount > maxBalance) {
                 System.out.println("-> Error: Payment exceeds the outstanding balance of ₱" + String.format("%.2f", maxBalance));
-                continue; // Loop again
+                continue;
             }
 
             break;
